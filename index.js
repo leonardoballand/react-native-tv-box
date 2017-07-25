@@ -1,6 +1,6 @@
 'use strict'
 
-import { fetch } from 'node-fetch'
+import Fetch  from 'node-fetch'
 
 /**
  * Livebox
@@ -285,17 +285,14 @@ class RNTvBox {
      * }
      */
     getStatus() {
-        return `${this._uri}?operation=10`
-        /*
-        fetch(`${this._uri}?operation=10`)
-            .then(data => data.json())
-            .then(res => {
-                const {data} = res.result
-                switch (data.) {
-
-                }
+        Fetch(`${this._uri}?operation=10`)
+            .then(res => res.json())
+            .then(json => {
+                const {data} = json.result
+                console.log(data)
             })
-        */
+            .catch(err => console.log(err))
+        // return `${this._uri}?operation=10`
     }
 
     /**
