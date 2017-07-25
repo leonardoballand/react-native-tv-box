@@ -1,115 +1,40 @@
 'use strict'
-
-import Fetch  from 'node-fetch'
-
 /**
- * Livebox
- * @param Opération
- * 10: Status de la livebox
- * 01: Action de télécommande
- * 09: Changer de chaîne
+ * 
+ * React-Native-Tv-Box
+ * by Leonardo BALLAND <balland.leonardo@outlook.fr>
+ * 
+ * Unified API for french TV boxes
+ * Actually supports :
+ * 
+ * LIVEBOX
+ * @param Operation
+ *  10: Box status
+ *  01: Remote action
+ *  09: Channels zap
  * @param Mode
- * 0: Envoi unique de touche
- * 1: Appui prolongé de touche
- * 2: Relâchement de touche après appui prolongé
+ *  0: Unique key press
+ *  1: Long key press
+ *  2: Long key press release
  * @param Code
- * Keymaps[0][i]
- */
-
-/**
- * Freebox
+ *  Keymaps.json
+ *
+ * 
+ * FREEBOX
  * @param Code
- * Code réseau de la télécommande
+ *  Remote network code
  * @param Long
- * True: Appui prolongé
- * False: Appui court
+ *  True: Long key press
+ *  False: Normal key press
  * @param Key
- * Keymaps[1][i]
+ *  Keymaps.json
+ * 
+ * 
  */
 
-const Keymaps = [
-    {
-        "name": "livebox",
-        "keys": {
-            "power": 116,
-            "0": 512,
-            "1": 513,
-            "2": 514,
-            "3": 515,
-            "4": 516,
-            "5": 517,
-            "6": 518,
-            "7": 519,
-            "8": 520,
-            "9": 521,
-            "epg_up": 402,
-            "epg_dwn": 403,
-            "vol_up": 115,
-            "vol_dwn": 114,
-            "mute": 113,
-            "up": 103,
-            "left": 105,
-            "right": 116,
-            "down": 108,
-            "ok": 352,
-            "back": 158,
-            "menu": 139,
-            "play": 164,
-            "rec": 167,
-            "fbackward": 168,
-            "fforward": 159,
-            "vod": 393,
-        }
-    },
-    {
-        "name": "freebox",
-        "keys": {
-            "power": "power",
-            "red": "red",
-            "green": "green",
-            "blue": "blue",
-            "yellow": "yellow",
-            "list": "list",
-            "tv": "tv",
-            "0": 0,
-            "1": 1,
-            "2": 2,
-            "3": 3,
-            "4": 4,
-            "5": 5,
-            "6": 6,
-            "7": 7,
-            "8": 8,
-            "9": 9,
-            "back": "back",
-            "swap": "swap",
-            "info": "info",
-            "epg": "epg",
-            "mail": "mail",
-            "media": "media",
-            "help": "help",
-            "options": "options",
-            "pip": "pip",
-            "vol_up": "vol_inc",
-            "vol_dwn": "vol_dec",
-            "ok": "ok",
-            "up": "up",
-            "left": "left",
-            "right": "right",
-            "down": "down",
-            "epg_up": "prgm_inc",
-            "epg_dwn": "prgm_dec",
-            "mute": "mute",
-            "menu": "home",
-            "rec": "rec",
-            "play": "play",
-            "fbackward": "bwd",
-            "fforward": "fwd",
-            "prev": "prev",
-            "next": "next",
-        }
-    },
-]
+import 'whatwg-fetch'
+
+const Keymaps = require('./Keymaps.json')
 
 let instance = null
 
@@ -174,21 +99,32 @@ class RNTvBox {
             default:
                 URI = null
         }
-        if (URI && typeof URI === 'string') {
-            this.uri = URI
-        } else {
-            throw Error('Unknown platform. Please set platform before to use!')
-        }
+        
+        URI && typeof URI === 'string' ?
+            this.uri = URI :
+                throw Error('Unknown platform. Please set platform before to use!')
     }
 
-    _sendRequest(params) {
+    _sendCommand(params) {
         let request = null
-        if (this._pid === 0) {
-            request = fetch(`${this._uri}?key=${params.key}&${params.mode}`)
-        } else if (this._pid === 1) {
-            request =fetch(`${this._uri}&key=${params.key}&${params.mode}`)
+        if (this._pid) {
+            switch(this._pid) {
+                case 0:
+                    request = `${this._uri}?operation=${params.operation}&key=${params.key}&${params.mode}`
+                    break
+                case 1:
+                    request = `${this._uri}&key=${params.key}&${params.mode}`
+                    break
+            }
+            return new Promise((resolve, reject) => {
+                fetch(request)
+                    .then(res => res.json())
+                    .then(json => resolve(json.result))
+                    .catch(err => reject(err))
+            })
+        } else {
+            throw Error("Unknown platform. Use setPlatform() before anything else!")
         }
-        request.then((data) => Object.assign({}, data))
     }
 
     /**
@@ -206,7 +142,6 @@ class RNTvBox {
      * })
      */
     setPlatform(platform = null, options = null) {
-
         if (!platform || typeof platform !== 'string') {
             throw Error('Missing platform name. String "livebox" or "freebox" required!')
         } else {
@@ -220,104 +155,130 @@ class RNTvBox {
             }
         }
 
-        if (options && typeof options === 'object') {
-            this.settings = options
-        } else {
-            throw Error('Missing platform options. Object options required!')
-        }
+        options && typeof options === 'object' ? 
+            this.settings = options : 
+                throw Error('Missing platform options. Object options required!')
     }
 
     /**
      * getStatus()
      * Returns STB status (Livebox only)
-     * @return {String} status URI
-     * 
-     * Sample states: 
-     * STANDBY
-     * { 
-     *  "result": { 
-     *      "responseCode": "0", 
-     *      "message": "ok", 
-     *      "data": { 
-     *          "osdContext": "MAIN_PROCESS", 
-     *          "macAddress": "18:62:2C:xx:xx:xx", 
-     *          "wolSupport": "0", 
-     *          "friendlyName": "décodeur TV d'Orange", 
-     *          "activeStandbyState": "1"
-     *      } 
-     *  } 
-     * }
-     * 
-     * POWER ON
-     * { 
-     *  "result": { 
-     *      "responseCode": "0", 
-     *      "message": "ok", 
-     *      "data": { 
-     *          "osdContext": "HOMEPAGE", 
-     *          "macAddress": "18:62:2C:xx:xx:xx", 
-     *          "wolSupport": "0", 
-     *          "friendlyName": "décodeur TV d'Orange", 
-     *          "activeStandbyState": "0" 
-     *      } 
-     *  } 
-     * }
-     * 
-     * PLAYING
-     * { 
-     *  "result": { 
-     *      "responseCode": "0", 
-     *      "message": "ok", 
-     *      "data": { 
-     *          "timeShiftingState": "0", 
-     *          "playedMediaType": "LIVE", 
-     *          "playedMediaState": "PLAY", 
-     *          "playedMediaId": "47", 
-     *          "playedMediaContextId": "1", 
-     *          "playedMediaPosition": "NA", 
-     *          "osdContext": "LIVE", 
-     *          "macAddress": "18:62:2C:xx:xx:xx", 
-     *          "wolSupport": "0", 
-     *          "friendlyName": "décodeur TV d'Orange", 
-     *          "activeStandbyState": "0" 
-     *      } 
-     *  } 
-     * }
+     * @return {String} 'standby' || 'active' || 'playing'
      */
     getStatus() {
-        Fetch(`${this._uri}?operation=10`)
-            .then(res => res.json())
-            .then(json => {
-                const {data} = json.result
-                console.log(data)
+        if (this._pid) {
+            return new Promise((resolve, reject) => {
+                fetch(`${this.uri}?operation=10`)
+                    .then(res => res.json())
+                    .then(json => {
+                        const response = json.result
+                        if (response.responseCode === "0" && response.message === "ok") {
+                            const { data } = response
+                            switch(data.activeStandbyState) {
+                                case "1":
+                                    resolve('standby')
+                                    break
+                                case "0":
+                                    data.playedMediaState !== undefined ?
+                                        resolve('playing') :
+                                            resolve('active')
+                                    break
+                            }
+                        }
+                    })
+                    .catch(err => reject(err))
             })
-            .catch(err => console.log(err))
-        // return `${this._uri}?operation=10`
+        } else {
+            throw Error("Unknown platform. Use setPlatform() before anything else!")
+        }
     }
 
     /**
+     * getInfos()
+     * Returns STB informations (Livebox only)
+     * @return {Object}
      * 
+     * Sample states:
+     * STANDBY
+     * 
+     * "data": { 
+     *     "osdContext": "MAIN_PROCESS", 
+     *     "macAddress": "18:62:2C:xx:xx:xx", 
+     *     "wolSupport": "0", 
+     *     "friendlyName": "décodeur TV d'Orange", 
+     *     "activeStandbyState": "1"
+     * }
+     * 
+     * POWER ON
+     * 
+     * "data": { 
+     *     "osdContext": "HOMEPAGE", 
+     *     "macAddress": "18:62:2C:xx:xx:xx", 
+     *     "wolSupport": "0", 
+     *     "friendlyName": "décodeur TV d'Orange", 
+     *     "activeStandbyState": "0" 
+     * }
+     * 
+     * PLAYING
+     * 
+     * "data": { 
+     *     "timeShiftingState": "0", 
+     *     "playedMediaType": "LIVE", 
+     *     "playedMediaState": "PLAY", 
+     *     "playedMediaId": "47", 
+     *     "playedMediaContextId": "1", 
+     *     "playedMediaPosition": "NA", 
+     *     "osdContext": "LIVE", 
+     *     "macAddress": "18:62:2C:xx:xx:xx", 
+     *     "wolSupport": "0", 
+     *     "friendlyName": "décodeur TV d'Orange", 
+     *     "activeStandbyState": "0" 
+     * }
+     */
+    getInfos() {
+        if (this._pid) {
+            return new Promise((resolve, reject) => {
+                fetch(`${this.uri}?operation=10`)
+                    .then(res => res.json())
+                    .then(json => {
+                        const response = json.result
+                        if (response.responseCode === "0" && response.message === "ok") {
+                            resolve(response.data)
+                        }
+                    })
+                    .catch(err => reject(err))
+            })
+        } else {
+            throw Error("Unknown platform. Use setPlatform() before anything else!")
+        }
+    }
+
+    /**
+     * set()
+     * Send a command to Tv Box
      * @param {Object} action 
-     * key, mode
+     *  key {String},
+     *  mode {key/value}
      * @return {Object} response
      */
     set(action = null) {
-        if (!action || typeof action !== 'object') {
-            throw Error('Unknown action. Object containing action parameters required!')
-        } else {
-            if (!action.key || typeof action.key !== 'string' || !action.mode || typeof action.mode !== 'object') {
-                throw Error('Action error: Key must be String type!')
+        if (this._pid) {
+            if (!action || typeof action !== 'object') {
+                throw Error('Unknown action. Object containing action parameters required!')
             } else {
-                const params = {
-                    key: `key=${Keymaps[this._pid][action.key]}`,
-                    mode: `${Object.keys(action.mode)}=${action.mode[Object.keys(action.mode)]}`,
+                if (!action.key || typeof action.key !== 'string' || !action.mode || typeof action.mode !== 'object') {
+                    throw Error('Action error: Key must be String type!')
+                } else {
+                    return this._sendCommand({
+                        key: `${Keymaps[this._pid].keys[action.key]}`,
+                        mode: `${Object.keys(action.mode)}=${action.mode[Object.keys(action.mode)]}`,
+                        operation: '01',
+                    })
                 }
-                return this._sendRequest(params)
             }
+        } else {
+            throw Error("Unknown platform. Use setPlatform() before anything else!")
         }
-
-
-
     }
 
 }
