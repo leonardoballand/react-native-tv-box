@@ -1,9 +1,6 @@
 'use strict'
 
-import { NativeModules } from 'react-native'
-import { fetch } from 'whatwg-fetch'
-
-// const { RNTvBox } = NativeModules;
+import { fetch } from 'node-fetch'
 
 /**
  * Livebox
@@ -114,69 +111,78 @@ const Keymaps = [
     },
 ]
 
+let instance = null
+
 class RNTvBox {
 
     constructor() {
-        this._pid = null
-        this._uri = null
-        this._settings = {
-            networkCode: null,
-            ip: null,
+        if (!instance) {
+            this._uri = null
+            this._settings = {}
+            instance = this
         }
+
+        return instance
     }
 
-    set _uri(uri) {
-        this._uri = uri
-    }
-
-    get _uri() {
+    get uri() {
         return this._uri
     }
 
-    set _settings(settings) {
-        if (typeof settings.remotecode !== "number") {
-            throw Error('Wrong remote network code. Number required!')
+    set uri(uri) {
+        if (uri) {
+            this._uri = uri
         }
-
-        if (typeof settings.boxname !== "string") {
-            throw Error('Wrong box name. "hd1" or "hd2" required!')
-        }
-
-        this._settings = Object.assign({}, this._settings, {
-            _previousState: {
-                networkCode: this._settings.networkCode,
-                name: this._settings.name,
-            },
-            networkCode: settings.networkCode,
-            name: settings.boxName
-        })
     }
 
-    get _settings() {
+    get settings() {
         return this._settings
+    }
+
+    set settings(params) {
+        if (params) {
+            if (params.networkCode && typeof params.networkCode !== "number") {
+                throw Error('Wrong remote network code. Number required!')
+            }
+
+            if (typeof params.ip !== "string") {
+                throw Error('Wrong IP address. Livebox: "http://xx.xx.xx.xx:port" || Freebox: "http://hdx.freebox.fr"')
+            }
+
+            this._settings = Object.assign({}, this._settings, {
+                _previousState: {
+                    networkCode: this._settings.networkCode,
+                    ip: this._settings.ip,
+                },
+                networkCode: params.networkCode,
+                ip: params.ip
+            })
+
+            this._setURI()
+        }
     }
 
     _setURI() {
         let URI
         switch(this._pid && typeof this._pid === 'number') {
             case 0:
-                URI = `http://${this._settings.ip}/remoteControl/cmd`
+                URI = `${this._settings.ip}/remoteControl/cmd`
                 break
             case 1:
-                URI = `http://${this._settings.ip}/pub/remote_control?code=${this._settings.networkCode}`
+                URI = `${this._settings.ip}/pub/remote_control?code=${this._settings.networkCode}`
                 break
             default:
                 URI = null
         }
         if (URI && typeof URI === 'string') {
-            this._uri = URI
+            this.uri = URI
         } else {
             throw Error('Unknown platform. Please set platform before to use!')
         }
     }
 
     _sendRequest(params) {
-        const request
+        let request = null
         if (this._pid === 0) {
             request = fetch(`${this._uri}?key=${params.key}&${params.mode}`)
         } else if (this._pid === 1) {
@@ -187,18 +193,20 @@ class RNTvBox {
 
     /**
      * setPlaform()
-     * Defines platform id and set options required (see params)
+     * Defines platform id and set options required
      * @param {String} platform 
      * @param {Object} options
+     * - ip {String} // 'http://xx.xx.xx.xx:port'
+     * - remoteCode {Number} // Freebox only
+     * - name {String} // Freebox only 'hd1', 'hd2'
      * 
      * Sample:
      * TvBox.setPlatform('livebox', {
-     *  ip: 192.168.1.13:8080,
+     *  ip: 'http://192.168.1.13:8080',
      * })
      */
     setPlatform(platform = null, options = null) {
-        
-        // Set PID
+
         if (!platform || typeof platform !== 'string') {
             throw Error('Missing platform name. String "livebox" or "freebox" required!')
         } else {
@@ -212,9 +220,8 @@ class RNTvBox {
             }
         }
 
-        // Set specific platform settings
         if (options && typeof options === 'object') {
-            this._settings = options
+            this.settings = options
         } else {
             throw Error('Missing platform options. Object options required!')
         }
@@ -223,7 +230,7 @@ class RNTvBox {
     /**
      * getStatus()
      * Returns STB status (Livebox only)
-     * @return {Object} response
+     * @return {String} status URI
      * 
      * Sample states: 
      * STANDBY
@@ -278,7 +285,17 @@ class RNTvBox {
      * }
      */
     getStatus() {
-        return fetch(`${this._uri}?operation=10`)
+        return `${this._uri}?operation=10`
+        /*
+        fetch(`${this._uri}?operation=10`)
+            .then(data => data.json())
+            .then(res => {
+                const {data} = res.result
+                switch (data.) {
+
+                }
+            })
+        */
     }
 
     /**
@@ -308,4 +325,4 @@ class RNTvBox {
 
 }
 
-export default RNTvBox;
+export default new RNTvBox()
