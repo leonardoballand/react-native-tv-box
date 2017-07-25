@@ -44,10 +44,86 @@
 
 
 ## Usage
-```javascript
-import RNTvBox from 'react-native-tv-box';
 
-// TODO: What to do with the module?
-RNTvBox;
+### Methods
+#### setPlatform(platform, options)
+Initialize platform (see **API Support** for options)
+
+#### set({key, mode})
+Send command to your box and returns:
+- responseCode: "0" if no error
+- message: "ok" if no error
+- data: null
+#### getStatus() - Livebox only
+Ask for box status and returns:
+* 'active' when box is ON
+* 'standby' when box is OFF
+* 'playing' when box is playing media or liveTV
+
+#### getInfos() - Livebox only
+Ask for box informations and returns:
+- timeShiftingState: timeshift status
+- playedMediaType: current media type
+- playedMediaState: current media status
+- playedMediaId: current channel ID
+- playedMediaContextId: current media context id
+- playedMediaPosition: current media position
+- osdContext: Current screen
+- macAddress: Device MAC address
+- wolSupport: Wake-on-Lan support status
+- friendlyName: Box name
+- activeStandbyState: Standby status
+
+### API Support
+*25/07/17* Only **Livebox** and **Freebox** are currently supported
+### Example
+
+Try TvBoxExample Application in `./Example` folder
+```javascript
+import RNTvBox from 'react-native-tv-box'
+
+class TVBox extends React.Component {
+
+	constructor() {
+		super()
+
+		this.state = {
+			status: '',
+			name: '',
+		}
+	}
+
+	componentWillMount() {
+		RNTvBox.setPlatform('livebox', {ip: 'http://192.168.1.13:8080'}) // set platform
+	}
+
+	getStatus() {
+		RNTvBox.getStatus()
+		.then(status => {
+			this.setState({status: status})
+		})
+		.catch(err => console.error(err))
+	}
+
+	getName() {
+		RNTvBox.getInfos()
+		.then(infos => {
+			this.setState({name: infos.friendlyName})
+		})
+		.catch(err => console.error(err))
+	}
+
+	render() {
+		return(
+			<View>
+				<Text>Box: {this.state.name}</Text>
+				<Text>Status: {this.state.status}</Text>
+			</View>
+		)
+	}
+}
 ```
+
+## TODO
+- setPlatform() must return request state
   

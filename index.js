@@ -100,9 +100,7 @@ class RNTvBox {
                 URI = null
         }
         
-        URI && typeof URI === 'string' ?
-            this.uri = URI :
-                throw Error('Unknown platform. Please set platform before to use!')
+        URI && typeof URI === 'string' ? this.uri = URI : throw Error('Unknown platform. Please set platform before to use!')
     }
 
     _sendCommand(params) {
@@ -155,9 +153,7 @@ class RNTvBox {
             }
         }
 
-        options && typeof options === 'object' ? 
-            this.settings = options : 
-                throw Error('Missing platform options. Object options required!')
+        options && typeof options === 'object' ? this.settings = options : throw Error('Missing platform options. Object options required!')
     }
 
     /**
