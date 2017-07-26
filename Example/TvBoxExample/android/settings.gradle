@@ -1,0 +1,6 @@
+rootProject.name = 'TvBoxExample'
+
+include ':app'
+
+include ':react-native-tv-box'
+project(':react-native-tv-box').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-tv-box/android')

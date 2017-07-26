@@ -55,7 +55,7 @@ class RNTvBox {
     }
 
     set uri(uri) {
-        if (uri) {
+        if (uri && typeof uri === 'string') {
             this._uri = uri
         }
     }
@@ -65,7 +65,7 @@ class RNTvBox {
     }
 
     set settings(params) {
-        if (params) {
+        if (params && typeof params === 'object') {
             if (params.networkCode && typeof params.networkCode !== "number") {
                 throw Error('Wrong remote network code. Number required!')
             }
@@ -100,7 +100,11 @@ class RNTvBox {
                 URI = null
         }
         
-        URI && typeof URI === 'string' ? this.uri = URI : throw Error('Unknown platform. Please set platform before to use!')
+        if (URI && typeof URI === 'string') {
+            this.uri = URI
+        } else {
+            throw Error('Unknown platform. Please set platform before to use!')
+        }
     }
 
     _sendCommand(params) {
@@ -142,7 +146,7 @@ class RNTvBox {
     setPlatform(platform = null, options = null) {
         if (!platform || typeof platform !== 'string') {
             throw Error('Missing platform name. String "livebox" or "freebox" required!')
-        } else {
+        } else {                
             platform = platform.toLowerCase()            
             if (platform === 'freebox') {
                 this._pid = 1
@@ -151,9 +155,24 @@ class RNTvBox {
             } else {
                 throw Error('Unknown platform! Only "livebox", "freebox" supported!')
             }
-        }
+                            
+            if (options && typeof options === 'object') {
+                this.settings = options
+            } else {
+                throw Error('Missing platform options. Object options required!')
+            }
 
-        options && typeof options === 'object' ? this.settings = options : throw Error('Missing platform options. Object options required!')
+            return (
+                {
+                    responseCode: '0',
+                    message: 'ok', 
+                    data: Object.assign({}, options, {
+                        platform: platform
+                    })
+                }
+            )
+
+        }
     }
 
     /**

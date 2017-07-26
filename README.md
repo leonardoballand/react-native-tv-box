@@ -47,7 +47,10 @@
 
 ### Methods
 #### setPlatform(platform, options)
-Initialize platform (see **API Support** for options)
+Initialize platform (see **API Support** for options) and returns:
+- responseCode: "0" if no error
+- message: "ok" if no error
+- data: Data sent to initialize platform
 
 #### set({key, mode})
 Send command to your box and returns:
@@ -76,6 +79,45 @@ Ask for box informations and returns:
 
 ### API Support
 *25/07/17* Only **Livebox** and **Freebox** are currently supported
+
+| Remote keys      | Alias       | Livebox     | Freebox      |
+|------------------|-------------|-------------|--------------|
+| Power            | power		 | ✔           | ✔           |
+| 0-9              | 0-9		 | ✔           | ✔           |
+| Up arrow         | up			 | ✔           | ✔           |
+| Left arrow       | left		 | ✔           | ✔           |
+| Right arrow      | right		 | ✔           | ✔           |
+| Down arrow       | down		 | ✔           | ✔           |
+| Increase volume  | vol_up		 | ✔           | ✔           |
+| Decrease volume  | vol_dwn	 | ✔           | ✔           |
+| Previous channel | epg_up		 | ✔           | ✔           |
+| Next channel     | epg_dwn	 | ✔           | ✔           |
+| Mute             | mute		 | ✔           | ✔           |
+| OK               | ok			 | ✔           | ✔           |
+| Back             | back		 | ✔           | ✔           |
+| Menu             | menu		 | ✔           | ✔           |
+| Play/Pause       | play		 | ✔           | ✔           |
+| Rec              | rec		 | ✔           | ✔           |
+| Fast backward    | fbackward	 | ✔           | ✔           |
+| Fast forward     | fforward	 | ✔           | ✔           |
+| Previous		   | prev		 | ✗           | ✔           |
+| Next		       | next		 | ✗           | ✔           |
+| VOD              | vod		 | ✔           | ✗           |
+| Red              | red		 | ✗           | ✔           |
+| Green            | green		 | ✗           | ✔           |
+| Blue             | blue		 | ✗           | ✔           |
+| Yellow           | yellow		 | ✗           | ✔           |
+| List             | list		 | ✗           | ✔           |
+| Tv               | tv			 | ✗           | ✔           |
+| Swap             | swap		 | ✗           | ✔           |
+| Info             | info		 | ✗           | ✔           |
+| EPG              | epg		 | ✗           | ✔           |
+| Mail             | mail		 | ✗           | ✔           |
+| Media            | media		 | ✗           | ✔           |
+| Help             | help		 | ✗           | ✔           |
+| Options          | options	 | ✗           | ✔           |
+| Pip              | pip		 | ✗           | ✔           |
+
 ### Example
 
 Try TvBoxExample Application in `./Example` folder
@@ -93,8 +135,15 @@ class TVBox extends React.Component {
 		}
 	}
 
-	componentWillMount() {
+	componentDidMount() {
 		RNTvBox.setPlatform('livebox', {ip: 'http://192.168.1.13:8080'}) // set platform
+			.then(res => {
+				if (res.responseCode === "0" && res.message === "ok") {
+					this.getStatus()
+					this.getName()
+				}
+			})
+			.catch(err => console.log(err))
 	}
 
 	getStatus() {
@@ -125,5 +174,5 @@ class TVBox extends React.Component {
 ```
 
 ## TODO
-- setPlatform() must return request state
+- ~~setPlatform() must return request state~~
   
