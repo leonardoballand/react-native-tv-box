@@ -1,5 +1,8 @@
 
 # react-native-tv-box
+TvBox is a custom React-Native package to help people building remote controller mobile application. A unique APIs of every french TV box is the objective of this package. It helps to focus on UI development, which should be our main goal using React-Native...ain't it?
+
+I've developed this package to introduce my new Youtube video series about React Native, so I'd be pleased to see you support, contribute and share my work :)
 
 ## Getting started
 
