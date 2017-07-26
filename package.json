@@ -1,20 +1,36 @@
 {
   "name": "react-native-tv-box",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "Unified API to communicate with TV box.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "react-native"
+    "react-native",
+    "livebox",
+    "freebox",
+    "react-library"
   ],
-  "author": "Leonardo BALLAND",
+  "author": {
+    "name": "Leonardo BALLAND",
+    "email": "balland.leonardo@gmail.com",
+    "url": "https://leonardoballand.com"
+  },
   "license": "MIT",
   "peerDependencies": {
     "react-native": "^0.46.4"
   },
   "dependencies": {
     "whatwg-fetch": "^2.0.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digitalz4k/react-native-tv-box.git"
+  },
+  "bugs": {
+    "email": "balland.leonardo@gmail.com",
+    "url": "https://github.com/digitalz4k/react-native-tv-box/issues"
+  },
+  "homepage": "https://github.com/digitalz4k/react-native-tv-box/"
 }
