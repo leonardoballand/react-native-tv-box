@@ -48,4 +48,7 @@ buck-out/
 .vscode
 
 #NPM
-package-lock.json      
+package-lock.json
+
+#JENKINS
+.jenkins
