@@ -3,7 +3,6 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        pwd()
         sh 'checkout scm'
         echo 'Checkout Stage'
       }
