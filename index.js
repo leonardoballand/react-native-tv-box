@@ -176,6 +176,28 @@ class RNTvBox {
     }
 
     /**
+     * scan()
+     * Search for livebox IP on the local network (Livebox only)
+     * @return {Object} Box IP
+     */
+    async scan() {
+        if (!this._pid){
+            for (let lastIdx = 0; lastIdx <= 254; lastIdx++) {
+                const req = await fetch(`http://192.168.1.${lastIdx}?operation=10`)
+                const { result } = req.json()
+                if (result.responseCode === '0' && result.message === '0') {
+                    const ip = `http://192.168.1.${lastIdx}`
+                    this.setPlatform('livebox', ip)
+                    return { statusCode: 0, ip, message: 'IP found' }
+                }
+            }
+            return { statusCode: -1, ip: null, message: 'IP not found' }
+        } else {
+         this.getInfos()
+        }
+    }
+
+    /**
      * getStatus()
      * Returns STB status (Livebox only)
      * @return {String} 'standby' || 'active' || 'playing'
