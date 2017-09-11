@@ -1,6 +1,6 @@
 {
   "name": "react-native-tv-box",
-  "version": "2.0.0-alpha13",
+  "version": "2.0.0-alpha14",
   "description": "Unified API to communicate with TV box.",
   "main": "lib/index.js",
   "scripts": {
